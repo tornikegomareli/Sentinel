@@ -37,8 +37,15 @@ pub async fn run() -> Result<()> {
             if let Event::Key(key) = event::read()? {
                 if key.kind == KeyEventKind::Press {
                     match key.code {
-                        KeyCode::Char('q') if key.modifiers.contains(event::KeyModifiers::CONTROL) => {
+                        KeyCode::Char('q')
+                            if key.modifiers.contains(event::KeyModifiers::CONTROL) =>
+                        {
                             break;
+                        }
+                        KeyCode::Char('t')
+                            if key.modifiers.contains(event::KeyModifiers::CONTROL) =>
+                        {
+                            app.toggle_tools();
                         }
                         KeyCode::Char(c) => {
                             app.handle_input(c);
@@ -87,50 +94,55 @@ pub async fn run() -> Result<()> {
 fn ui(f: &mut Frame, app: &App) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([
-            Constraint::Min(3),
-            Constraint::Length(3),
-        ])
+        .constraints([Constraint::Min(3), Constraint::Length(3)])
         .split(f.size());
 
     // Create a scrollable area for chat messages
     let mut messages_text = Vec::new();
-    
+
     for msg in &app.messages {
         let role = match msg.role {
             crate::llm::Role::User => "You",
             crate::llm::Role::Assistant => "Claude",
             crate::llm::Role::System => "System",
         };
-        
+
         // Add role as a Line with bold style
         let mut role_line = Line::from(format!("{}: ", role));
         role_line.spans[0].style = Style::default().add_modifier(Modifier::BOLD);
         messages_text.push(role_line);
-        
+
         // Add content as a separate Line(s) with normal style
         let content_lines = msg.content.split('\n');
         for content in content_lines {
             // Add indentation to content lines for better readability
             messages_text.push(Line::from(format!("  {}", content)));
         }
-        
+
         // Add a blank line between messages
         messages_text.push(Line::from(""));
     }
-    
+
     // Create a paragraph with all messages
     let messages = Paragraph::new(messages_text)
         .block(Block::default().borders(Borders::ALL).title("Chat"))
         .wrap(Wrap { trim: false });
-    
+
     f.render_widget(messages, chunks[0]);
 
     // Input field
     let input_status = if app.is_loading {
-        "Loading..."
+        "Loading...".to_string()
     } else {
-        "Enter message (Ctrl+Q to quit)"
+        let tools_status = if app.use_tools {
+            "Tools: ON"
+        } else {
+            "Tools: OFF"
+        };
+        format!(
+            "Enter message (Ctrl+Q to quit, Ctrl+T to toggle tools) | {}",
+            tools_status
+        )
     };
 
     let input = Paragraph::new(app.input.as_str())
@@ -142,9 +154,6 @@ fn ui(f: &mut Frame, app: &App) {
 
     // Set cursor position
     if !app.is_loading {
-        f.set_cursor(
-            chunks[1].x + app.input.len() as u16 + 1,
-            chunks[1].y + 1,
-        );
+        f.set_cursor(chunks[1].x + app.input.len() as u16 + 1, chunks[1].y + 1);
     }
 }

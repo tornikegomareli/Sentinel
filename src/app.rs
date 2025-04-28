@@ -1,4 +1,4 @@
-use crate::llm::{LlmClient, Message, Role};
+use crate::llm::{LlmClient, Message, Role, Tool};
 use anyhow::Result;
 use std::collections::VecDeque;
 
@@ -10,6 +10,8 @@ pub struct App {
     pub history_index: usize,
     pub input_history: VecDeque<String>,
     pub llm_client: Box<dyn LlmClient>,
+    pub tools: Vec<Tool>,
+    pub use_tools: bool,
 }
 
 impl App {
@@ -22,7 +24,17 @@ impl App {
             history_index: 0,
             input_history: VecDeque::with_capacity(50),
             llm_client,
+            tools: Vec::new(),
+            use_tools: false,
         }
+    }
+    
+    pub fn add_tool(&mut self, tool: Tool) {
+        self.tools.push(tool);
+    }
+    
+    pub fn toggle_tools(&mut self) {
+        self.use_tools = !self.use_tools;
     }
     
     pub fn handle_input(&mut self, character: char) {
@@ -69,7 +81,11 @@ impl App {
             return Ok(());
         }
         
-        let response = self.llm_client.generate_response(&self.messages).await?;
+        let response = if self.use_tools && !self.tools.is_empty() {
+            self.llm_client.generate_response_with_tools(&self.messages, &self.tools).await?
+        } else {
+            self.llm_client.generate_response(&self.messages).await?
+        };
         
         let assistant_message = Message {
             role: Role::Assistant,

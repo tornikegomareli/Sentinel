@@ -2,14 +2,16 @@ mod claude;
 mod models;
 
 pub use claude::ClaudeClient;
-pub use models::{Message, Role};
+pub use models::{Message, Role, Tool};
 
 use anyhow::Result;
 use async_trait::async_trait;
+use serde_json::Value;
 
 #[async_trait]
 pub trait LlmClient: Send + Sync {
     async fn generate_response(&self, messages: &[Message]) -> Result<String>;
+    async fn generate_response_with_tools(&self, messages: &[Message], tools: &[Tool]) -> Result<String>;
 }
 
 pub enum LlmProvider {
@@ -24,4 +26,14 @@ pub fn create_client(provider: LlmProvider) -> Box<dyn LlmClient> {
         LlmProvider::OpenAI => unimplemented!("OpenAI support coming soon"),
         LlmProvider::Gemini => unimplemented!("Gemini support coming soon"),
     }
+}
+
+// Helper function to create a tool from JSON schema
+pub fn create_tool(name: &str, description: &str, schema_json: &str) -> Result<Tool> {
+    let schema: Value = serde_json::from_str(schema_json)?;
+    Ok(Tool {
+        name: name.to_string(),
+        description: description.to_string(),
+        input_schema: schema,
+    })
 }
