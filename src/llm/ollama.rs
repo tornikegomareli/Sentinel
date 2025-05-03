@@ -10,6 +10,9 @@ use ollama_rs::Ollama;
 use std::env;
 use std::sync::{Arc, Mutex};
 
+// Import our custom Bash tool
+use crate::tools::bash::Bash;
+
 pub struct OllamaClient {
     client: Ollama,
     model: String,
@@ -195,7 +198,8 @@ impl LlmClient for OllamaClient {
         .add_tool(get_weather)
         .add_tool(Calculator {})
         .add_tool(DDGSearcher::new())
-        .add_tool(Scraper {});
+        .add_tool(Scraper {})
+        .add_tool(Bash::new()); // Add our custom Bash tool
 
         // Send the last user message to the coordinator
         let user_message = ChatMessage::user(last_message.content.clone());
@@ -258,6 +262,18 @@ impl LlmClient for OllamaClient {
                     || content.contains("url")
                 {
                     tools.push("Scraper".to_string());
+                }
+                
+                // Check for Bash tool usage
+                if content.contains("command")
+                    || content.contains("executed")
+                    || content.contains("terminal")
+                    || content.contains("shell")
+                    || content.contains("bash")
+                    || content.contains("output shows")
+                    || content.contains("running")
+                {
+                    tools.push("bash".to_string());
                 }
             }
         }
