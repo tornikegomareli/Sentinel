@@ -1,8 +1,10 @@
 mod claude;
 mod models;
+mod ollama;
 
 pub use claude::ClaudeClient;
 pub use models::{Message, Role, Tool};
+pub use ollama::OllamaClient;
 
 use anyhow::Result;
 use async_trait::async_trait;
@@ -18,6 +20,7 @@ pub enum LlmProvider {
     Claude,
     OpenAI,
     Gemini,
+    Ollama,
 }
 
 pub fn create_client(provider: LlmProvider) -> Box<dyn LlmClient> {
@@ -25,6 +28,7 @@ pub fn create_client(provider: LlmProvider) -> Box<dyn LlmClient> {
         LlmProvider::Claude => Box::new(ClaudeClient::new()),
         LlmProvider::OpenAI => unimplemented!("OpenAI support coming soon"),
         LlmProvider::Gemini => unimplemented!("Gemini support coming soon"),
+        LlmProvider::Ollama => Box::new(OllamaClient::new()),
     }
 }
 
