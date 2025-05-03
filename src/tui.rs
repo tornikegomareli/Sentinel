@@ -18,8 +18,8 @@ pub async fn run() -> Result<()> {
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
-    // Create app state
-    let llm_client = create_client(LlmProvider::Claude);
+    // Create app state with Ollama client
+    let llm_client = create_client(LlmProvider::Ollama);
     let mut app = App::new(llm_client);
 
     // Run the event loop
@@ -103,7 +103,7 @@ fn ui(f: &mut Frame, app: &App) {
     for msg in &app.messages {
         let role = match msg.role {
             crate::llm::Role::User => "You",
-            crate::llm::Role::Assistant => "Claude",
+            crate::llm::Role::Assistant => "Ollama",
             crate::llm::Role::System => "System",
         };
 
