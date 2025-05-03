@@ -19,6 +19,10 @@ pub enum Commands {
         /// LLM model to use
         #[arg(short, long, default_value = "claude")]
         model: String,
+        
+        /// Enable tools for capable models
+        #[arg(short, long)]
+        tools: bool,
     },
     
     /// Set configuration options
@@ -38,5 +42,17 @@ pub enum Commands {
         /// Set the API key for Gemini
         #[arg(long)]
         gemini_key: Option<String>,
+        
+        /// Set the host for Ollama
+        #[arg(long)]
+        ollama_host: Option<String>,
+        
+        /// Set the port for Ollama
+        #[arg(long)]
+        ollama_port: Option<u16>,
+        
+        /// Set the model for Ollama
+        #[arg(long)]
+        ollama_model: Option<String>,
     },
 }
