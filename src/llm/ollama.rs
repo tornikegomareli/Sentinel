@@ -15,7 +15,6 @@ pub struct OllamaClient {
     model: String,
     host: String,
     port: u16,
-    // Track last used tools
     last_used_tools: Arc<Mutex<Vec<String>>>,
 }
 
@@ -101,7 +100,7 @@ impl LlmClient for OllamaClient {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
-    
+
     async fn generate_response(&self, messages: &[Message]) -> Result<(String, usize, usize)> {
         if messages.is_empty() {
             return Err(anyhow::anyhow!("Empty messages"));
