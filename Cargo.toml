@@ -18,3 +18,7 @@ chrono = "0.4.31"
 uuid = { version = "1.4.1", features = ["v4"] }
 ollama-rs = { version = "0.3.1", features = ["stream", "macros", "tool-implementations"] }
 schemars = "0.8.16"
+lazy_static = "1.4.0"
+
+[dev-dependencies]
+tempfile = "3.8.0"
