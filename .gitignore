@@ -2,3 +2,4 @@
 **/*.rs.bk
 .env
 Cargo.lock
+**/.claude/settings.local.json
