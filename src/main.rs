@@ -1,4 +1,5 @@
 mod llm;
+mod tools;
 mod tui;
 
 use anyhow::Result;
