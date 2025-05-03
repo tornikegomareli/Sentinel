@@ -199,7 +199,7 @@ impl LlmClient for OllamaClient {
         .add_tool(Calculator {})
         .add_tool(DDGSearcher::new())
         .add_tool(Scraper {})
-        .add_tool(Bash::new()); // Add our custom Bash tool
+        .add_tool(Bash::new());
 
         // Send the last user message to the coordinator
         let user_message = ChatMessage::user(last_message.content.clone());
@@ -263,7 +263,7 @@ impl LlmClient for OllamaClient {
                 {
                     tools.push("Scraper".to_string());
                 }
-                
+
                 // Check for Bash tool usage
                 if content.contains("command")
                     || content.contains("executed")
