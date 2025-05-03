@@ -10,8 +10,8 @@ use std::{
     time::{Duration, Instant},
 };
 
+use crate::llm::ollama::{LlmClient, OllamaClient};
 use crate::tui::{
-    llm::LlmHandler,
     message::UiMessage,
     ui::render_ui,
 };
@@ -24,8 +24,8 @@ enum InputMode {
 
 /// TUI Application state
 pub struct SentinelApp {
-    // LLM handler
-    llm_handler: LlmHandler,
+    // LLM client
+    llm_client: OllamaClient,
     
     // Message history
     messages: Vec<UiMessage>,
@@ -42,8 +42,8 @@ pub struct SentinelApp {
 impl SentinelApp {
     /// Create a new application
     fn new() -> Self {
-        // Create LLM handler
-        let llm_handler = LlmHandler::new();
+        // Create LLM client
+        let llm_client = OllamaClient::new();
         
         // Add a system message to start
         let mut messages = Vec::new();
@@ -52,7 +52,7 @@ impl SentinelApp {
         ));
         
         Self {
-            llm_handler,
+            llm_client,
             messages,
             input: String::new(),
             input_history: Vec::new(),
@@ -78,12 +78,12 @@ impl SentinelApp {
     
     /// Get the model name
     pub fn model_name(&self) -> &str {
-        self.llm_handler.model_name()
+        "llama3.2:latest" // Hardcoded for now as model is private in OllamaClient
     }
     
     /// Get the current tools that were used
     pub fn get_current_tools(&self) -> Vec<String> {
-        self.llm_handler.get_current_tools()
+        self.llm_client.get_last_used_tools()
     }
     
     /// Add a character to the input
@@ -156,11 +156,31 @@ impl SentinelApp {
         let message_index = self.messages.len() - 1;
         let user_message = &self.messages[message_index];
         
-        // Get previous conversation history
-        let history = &self.messages[..message_index];
+        // Get previous conversation history - not using for now as we're just sending the last message
+        let _history = &self.messages[..message_index];
+            
+        // Add the user message
+        let last_user_message = crate::Message {
+            role: crate::Role::User,
+            content: user_message.content.clone(),
+            input_tokens: 0,
+            output_tokens: 0,
+            used_tools: Vec::new(),
+        };
         
-        // Process the message
-        let response = self.llm_handler.process_message(history, user_message).await?;
+        // Generate response with tools
+        let (response_text, input_tokens, output_tokens, used_tools) = self
+            .llm_client
+            .generate_response_with_tools(&[last_user_message], &[])
+            .await?;
+            
+        // Create the response message
+        let response = UiMessage::assistant_with_tools(
+            response_text,
+            input_tokens,
+            output_tokens,
+            used_tools,
+        );
         
         // Add the response to the messages
         self.messages.push(response);

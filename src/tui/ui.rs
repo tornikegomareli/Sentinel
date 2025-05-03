@@ -7,11 +7,7 @@ use ratatui::{
     Frame,
 };
 
-use crate::tui::{
-    app::SentinelApp,
-    llm::ToolType,
-    message::MessageRole,
-};
+use crate::tui::{app::SentinelApp, message::MessageRole};
 
 /// Render the main UI
 pub fn render_ui<B: Backend>(f: &mut Frame, app: &SentinelApp) {
@@ -42,49 +38,49 @@ fn render_status_bar<B: Backend>(f: &mut Frame, app: &SentinelApp, area: Rect) {
     // Create tools display line
     let tools_line = {
         let mut tool_spans = Vec::new();
-        
-        // All possible tools
+
         let all_tools = [
-            ToolType::Weather,
-            ToolType::Calculator,
-            ToolType::Search,
-            ToolType::Scraper,
-            ToolType::Finance,
+            "get_weather",
+            "Calculator",
+            "DDGSearcher",
+            "Scraper",
+            "StockScraper",
+            "Bash",
         ];
 
         // Show tools and highlight used ones
         let current_tools = app.get_current_tools();
-        
+
         // Create spans for each tool
-        for (i, tool) in all_tools.iter().enumerate() {
-            let is_used = current_tools.contains(&tool.name().to_string());
-            
+        for (i, tool_name) in all_tools.iter().enumerate() {
+            let is_used = current_tools.contains(&tool_name.to_string());
+
             // Choose color based on if the tool was used
             let color = if is_used {
                 Color::Green
             } else {
                 Color::DarkGray
             };
-            
+
             // Add tool name with appropriate color
             if i > 0 {
                 tool_spans.push(Span::raw(" "));
             }
             tool_spans.push(Span::styled(
-                tool.name().to_string(),
+                tool_name.to_string(),
                 Style::default().fg(color),
             ));
         }
-        
+
         Line::from(tool_spans)
     };
 
     // Create the status box
     let status_content = Text::from(vec![status_text, tools_line]);
-    
+
     let status_bar = Paragraph::new(status_content)
         .block(Block::default().borders(Borders::ALL).title("Sentinel"));
-    
+
     f.render_widget(status_bar, area);
 }
 
@@ -121,24 +117,26 @@ fn render_messages<B: Backend>(f: &mut Frame, app: &SentinelApp, area: Rect) {
                 format!("{}: ", role_name),
                 Style::default().fg(color).add_modifier(Modifier::BOLD),
             );
-            
+
             // Create content
             let content_span = Span::raw(&msg.content);
-            
+
             // Create text with role and content
             let mut lines = Vec::new();
             lines.push(Line::from(vec![role_span, content_span]));
-            
+
             // Add tool usage info for assistant messages if tools were used
             if msg.role == MessageRole::Assistant && !msg.used_tools.is_empty() {
                 let tools_used = format!("Tools: {}", msg.used_tools.join(", "));
                 let tools_span = Span::styled(
                     tools_used,
-                    Style::default().fg(Color::DarkGray).add_modifier(Modifier::ITALIC),
+                    Style::default()
+                        .fg(Color::DarkGray)
+                        .add_modifier(Modifier::ITALIC),
                 );
                 lines.push(Line::from(vec![Span::raw("  "), tools_span]));
             }
-            
+
             ListItem::new(Text::from(lines))
         })
         .collect();
@@ -147,7 +145,7 @@ fn render_messages<B: Backend>(f: &mut Frame, app: &SentinelApp, area: Rect) {
     let messages_list = List::new(messages)
         .block(Block::default().borders(Borders::ALL).title("Conversation"))
         .highlight_style(Style::default().add_modifier(Modifier::BOLD));
-    
+
     f.render_widget(messages_list, chunks[0]);
 
     // Render the stats panel
@@ -162,16 +160,16 @@ fn render_stats_panel<B: Backend>(f: &mut Frame, app: &SentinelApp, area: Rect) 
         .iter()
         .rev()
         .find(|msg| msg.role == MessageRole::Assistant);
-    
+
     // Get token counts
     let input_tokens = latest_message
         .map(|msg| msg.input_tokens.to_string())
         .unwrap_or_else(|| "0".to_string());
-    
+
     let output_tokens = latest_message
         .map(|msg| msg.output_tokens.to_string())
         .unwrap_or_else(|| "0".to_string());
-    
+
     // Get used tools
     let used_tools = if let Some(msg) = latest_message {
         if !msg.used_tools.is_empty() {
@@ -182,7 +180,7 @@ fn render_stats_panel<B: Backend>(f: &mut Frame, app: &SentinelApp, area: Rect) 
     } else {
         "None".to_string()
     };
-    
+
     // Create the stats text
     let stats_text = vec![
         Line::from(vec![
@@ -194,46 +192,47 @@ fn render_stats_panel<B: Backend>(f: &mut Frame, app: &SentinelApp, area: Rect) 
             Span::styled(output_tokens, Style::default().fg(Color::Yellow)),
         ]),
         Line::from(""),
-        Line::from(vec![
-            Span::styled("Tools used:", Style::default().add_modifier(Modifier::UNDERLINED)),
-        ]),
+        Line::from(vec![Span::styled(
+            "Tools used:",
+            Style::default().add_modifier(Modifier::UNDERLINED),
+        )]),
         {
-            let color = if used_tools == "None" { Color::DarkGray } else { Color::Green };
-            Line::from(vec![
-                Span::styled(
-                    used_tools.clone(),
-                    Style::default().fg(color),
-                ),
-            ])
+            let color = if used_tools == "None" {
+                Color::DarkGray
+            } else {
+                Color::Green
+            };
+            Line::from(vec![Span::styled(
+                used_tools.clone(),
+                Style::default().fg(color),
+            )])
         },
     ];
-    
+
     // Create the stats widget
     let stats_widget = Paragraph::new(Text::from(stats_text))
         .block(Block::default().borders(Borders::ALL).title("Stats"))
         .wrap(Wrap { trim: true });
-    
+
     f.render_widget(stats_widget, area);
 }
 
 /// Render the input box
 fn render_input_box<B: Backend>(f: &mut Frame, app: &SentinelApp, area: Rect) {
     // Create the input box
-    let input = Paragraph::new(app.input())
-        .style(Style::default())
-        .block(
-            Block::default()
-                .borders(Borders::ALL)
-                .title("Input")
-                .style(Style::default().fg(if app.is_loading() {
-                    Color::DarkGray
-                } else {
-                    Color::White
-                })),
-        );
-    
+    let input = Paragraph::new(app.input()).style(Style::default()).block(
+        Block::default()
+            .borders(Borders::ALL)
+            .title("Input")
+            .style(Style::default().fg(if app.is_loading() {
+                Color::DarkGray
+            } else {
+                Color::White
+            })),
+    );
+
     f.render_widget(input, area);
-    
+
     // Show cursor if not loading
     if !app.is_loading() {
         f.set_cursor(
