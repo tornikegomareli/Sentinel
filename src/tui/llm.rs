@@ -155,18 +155,11 @@ impl LlmHandler {
                 let mut used_tools = Vec::new();
 
                 // Check for tool calls in the response
-                println!("\nDEBUG - Tool calls count: {}", response.message.tool_calls.len());
-                
                 if !response.message.tool_calls.is_empty() {
-                    println!("\nDEBUG - Tool calls details:");
-                    for (i, tool_call) in response.message.tool_calls.iter().enumerate() {
+                    for tool_call in &response.message.tool_calls {
                         let tool_name = tool_call.function.name.clone();
-                        println!("DEBUG - Tool call #{}: name='{}', args='{}'", 
-                            i + 1, tool_name, tool_call.function.arguments);
-                        
                         if !used_tools.contains(&tool_name) {
-                            used_tools.push(tool_name.clone());
-                            println!("DEBUG - Added tool: '{}'", tool_name);
+                            used_tools.push(tool_name);
                         }
                     }
                 }
@@ -203,7 +196,6 @@ impl LlmHandler {
 
     /// Detect which tools might have been used based on response content
     fn detect_tools_from_content(&self, content: &str, used_tools: &mut Vec<String>) {
-        println!("\nDEBUG - No explicit tool calls, checking content for implicit usage");
         let content = content.to_lowercase();
 
         // Check for each enabled tool if it was potentially used
@@ -215,9 +207,7 @@ impl LlmHandler {
                         || content.contains("forecast")
                         || content.contains("climate")
                     {
-                        let tool_name = tool.name().to_string();
-                        used_tools.push(tool_name.clone());
-                        println!("DEBUG - Detected implicit Weather tool usage: '{}'", tool_name);
+                        used_tools.push(tool.name().to_string());
                     }
                 }
                 ToolType::Calculator => {
@@ -228,9 +218,7 @@ impl LlmHandler {
                         || content.contains("equals")
                         || content.contains("calculate")
                     {
-                        let tool_name = tool.name().to_string();
-                        used_tools.push(tool_name.clone());
-                        println!("DEBUG - Detected implicit Calculator tool usage: '{}'", tool_name);
+                        used_tools.push(tool.name().to_string());
                     }
                 }
                 ToolType::Search => {
@@ -241,9 +229,7 @@ impl LlmHandler {
                         || content.contains("online")
                         || content.contains("internet")
                     {
-                        let tool_name = tool.name().to_string();
-                        used_tools.push(tool_name.clone());
-                        println!("DEBUG - Detected implicit Search tool usage: '{}'", tool_name);
+                        used_tools.push(tool.name().to_string());
                     }
                 }
                 ToolType::Scraper => {
@@ -254,9 +240,7 @@ impl LlmHandler {
                         || content.contains("content from")
                         || content.contains("page shows")
                     {
-                        let tool_name = tool.name().to_string();
-                        used_tools.push(tool_name.clone());
-                        println!("DEBUG - Detected implicit Scraper tool usage: '{}'", tool_name);
+                        used_tools.push(tool.name().to_string());
                     }
                 }
                 ToolType::Finance => {
@@ -267,9 +251,7 @@ impl LlmHandler {
                         || content.contains("shares")
                         || content.contains("ticker")
                     {
-                        let tool_name = tool.name().to_string();
-                        used_tools.push(tool_name.clone());
-                        println!("DEBUG - Detected implicit Finance tool usage: '{}'", tool_name);
+                        used_tools.push(tool.name().to_string());
                     }
                 }
             }
