@@ -11,6 +11,7 @@ use std::env;
 use std::sync::{Arc, Mutex};
 
 use crate::tools::bash::Bash;
+use crate::tools::file::FileTool;
 use crate::tools::ls::Ls;
 
 pub struct OllamaClient {
@@ -57,6 +58,20 @@ impl OllamaClient {
     pub fn get_last_used_tools(&self) -> Vec<String> {
         let tools = self.last_used_tools.lock().unwrap();
         tools.clone()
+    }
+
+    // Get a list of available tools
+    pub fn get_available_tools(&self) -> Vec<String> {
+        // Return the names of all tools that are available to the LLM
+        vec![
+            "Calculator".to_string(),
+            "weather".to_string(),
+            "DDGSearcher".to_string(),
+            "Scraper".to_string(),
+            "bash".to_string(),
+            "ls".to_string(),
+            "file".to_string(),
+        ]
     }
 
     pub fn with_model(mut self, model: &str) -> Self {
@@ -200,11 +215,12 @@ impl LlmClient for OllamaClient {
         .add_tool(DDGSearcher::new())
         .add_tool(Scraper {})
         .add_tool(Bash::new())
-        .add_tool(Ls::new());
+        .add_tool(Ls::new())
+        .add_tool(FileTool::new());
 
         // Print that we're using tools in coordinator
         println!("\x1b[1;34m[COORDINATOR] Starting conversation with tools enabled\x1b[0m");
-        
+
         // Send the last user message to the coordinator
         let user_message = ChatMessage::user(last_message.content.clone());
 
@@ -224,7 +240,10 @@ impl LlmClient for OllamaClient {
                     // Add each unique tool name to our tracking list
                     let tool_name = tool_call.function.name.clone();
                     if !tools.contains(&tool_name) {
-                        println!("\x1b[1;33m[TOOL USAGE] Tool '{}' was used in response\x1b[0m", tool_name);
+                        println!(
+                            "\x1b[1;33m[TOOL USAGE] Tool '{}' was used in response\x1b[0m",
+                            tool_name
+                        );
                         tools.push(tool_name);
                     }
                 }
@@ -285,8 +304,8 @@ impl LlmClient for OllamaClient {
                     println!("\x1b[1;33m[TOOL USAGE] Bash tool was used in response\x1b[0m");
                     tools.push("bash".to_string());
                 }
-                
-                // Check for LS tool usage 
+
+                // Check for LS tool usage
                 if content.contains("directory")
                     || content.contains("file list")
                     || content.contains("files in")
@@ -295,6 +314,19 @@ impl LlmClient for OllamaClient {
                 {
                     println!("\x1b[1;33m[TOOL USAGE] LS tool was used in response\x1b[0m");
                     tools.push("ls".to_string());
+                }
+
+                // Check for File tool usage
+                if content.contains("read file")
+                    || content.contains("wrote file")
+                    || content.contains("deleted file")
+                    || content.contains("moved file")
+                    || content.contains("copied file")
+                    || content.contains("file exists")
+                    || content.contains("saved to file")
+                {
+                    println!("\x1b[1;33m[TOOL USAGE] File tool was used in response\x1b[0m");
+                    tools.push("file".to_string());
                 }
             }
         }
