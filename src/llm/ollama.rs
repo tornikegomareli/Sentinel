@@ -202,6 +202,9 @@ impl LlmClient for OllamaClient {
         .add_tool(Bash::new())
         .add_tool(Ls::new());
 
+        // Print that we're using tools in coordinator
+        println!("\x1b[1;34m[COORDINATOR] Starting conversation with tools enabled\x1b[0m");
+        
         // Send the last user message to the coordinator
         let user_message = ChatMessage::user(last_message.content.clone());
 
@@ -221,6 +224,7 @@ impl LlmClient for OllamaClient {
                     // Add each unique tool name to our tracking list
                     let tool_name = tool_call.function.name.clone();
                     if !tools.contains(&tool_name) {
+                        println!("\x1b[1;33m[TOOL USAGE] Tool '{}' was used in response\x1b[0m", tool_name);
                         tools.push(tool_name);
                     }
                 }
@@ -238,6 +242,7 @@ impl LlmClient for OllamaClient {
                     || content.contains("temperature")
                     || content.contains("forecast")
                 {
+                    println!("\x1b[1;33m[TOOL USAGE] Weather tool was used in response\x1b[0m");
                     tools.push("weather".to_string());
                 }
 
@@ -246,6 +251,7 @@ impl LlmClient for OllamaClient {
                     || content.contains("math")
                     || content.contains("computation")
                 {
+                    println!("\x1b[1;33m[TOOL USAGE] Calculator tool was used in response\x1b[0m");
                     tools.push("Calculator".to_string());
                 }
 
@@ -254,6 +260,7 @@ impl LlmClient for OllamaClient {
                     || content.contains("according to")
                     || content.contains("search results")
                 {
+                    println!("\x1b[1;33m[TOOL USAGE] DDGSearcher tool was used in response\x1b[0m");
                     tools.push("DDGSearcher".to_string());
                 }
 
@@ -262,6 +269,7 @@ impl LlmClient for OllamaClient {
                     || content.contains("web page")
                     || content.contains("url")
                 {
+                    println!("\x1b[1;33m[TOOL USAGE] Scraper tool was used in response\x1b[0m");
                     tools.push("Scraper".to_string());
                 }
 
@@ -274,7 +282,19 @@ impl LlmClient for OllamaClient {
                     || content.contains("output shows")
                     || content.contains("running")
                 {
+                    println!("\x1b[1;33m[TOOL USAGE] Bash tool was used in response\x1b[0m");
                     tools.push("bash".to_string());
+                }
+                
+                // Check for LS tool usage 
+                if content.contains("directory")
+                    || content.contains("file list")
+                    || content.contains("files in")
+                    || content.contains("folder")
+                    || content.contains("listing")
+                {
+                    println!("\x1b[1;33m[TOOL USAGE] LS tool was used in response\x1b[0m");
+                    tools.push("ls".to_string());
                 }
             }
         }

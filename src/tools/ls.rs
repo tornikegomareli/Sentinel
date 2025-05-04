@@ -331,6 +331,9 @@ TIPS:
         &mut self,
         parameters: Self::Params,
     ) -> Result<String, Box<dyn std::error::Error + Sync + Send>> {
+        // Print colorful message indicating tool is being called
+        println!("\x1b[1;32m[LS TOOL] I am being called with path: {}\x1b[0m", parameters.path);
+        
         let path = parameters.path.trim();
         let path = if path.is_empty() {
             &self.working_directory

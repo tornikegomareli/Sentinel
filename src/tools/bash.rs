@@ -167,6 +167,9 @@ Usage notes:
         &mut self,
         parameters: Self::Params,
     ) -> Result<String, Box<dyn std::error::Error + Sync + Send>> {
+        // Print colorful message indicating tool is being called
+        println!("\x1b[1;31m[BASH TOOL] I am being called with command: {}\x1b[0m", parameters.command);
+        
         let command = parameters.command.trim();
         if command.is_empty() {
             return Ok("Error: Command is empty".to_string());
