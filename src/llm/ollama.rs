@@ -10,8 +10,8 @@ use ollama_rs::Ollama;
 use std::env;
 use std::sync::{Arc, Mutex};
 
-// Import our custom Bash tool
 use crate::tools::bash::Bash;
+use crate::tools::ls::Ls;
 
 pub struct OllamaClient {
     client: Ollama,
@@ -199,7 +199,8 @@ impl LlmClient for OllamaClient {
         .add_tool(Calculator {})
         .add_tool(DDGSearcher::new())
         .add_tool(Scraper {})
-        .add_tool(Bash::new());
+        .add_tool(Bash::new())
+        .add_tool(Ls::new());
 
         // Send the last user message to the coordinator
         let user_message = ChatMessage::user(last_message.content.clone());
