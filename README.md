@@ -1,5 +1,8 @@
 # Sentinel
 
+![ezgif-2c6f90c337b9c4](https://github.com/user-attachments/assets/4900ef72-8d26-40a8-8b78-adda9965a7d9)
+
+
 Sentinel is an open-source coding agent created for the [VibehackAI Hackathon](https://vibehack.ge/). It's designed to work entirely with locally hosted Ollama models, providing a free alternative to cloud-based coding assistants. **Note: This project is currently under heavy development.**
 
 ## Vision
