@@ -46,6 +46,7 @@ fn render_status_bar<B: Backend>(f: &mut Frame, app: &SentinelApp, area: Rect) {
             "Scraper",
             "StockScraper",
             "Bash",
+            "LS",
         ];
 
         // Show tools and highlight used ones
