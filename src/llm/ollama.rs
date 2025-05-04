@@ -12,6 +12,7 @@ use std::sync::{Arc, Mutex};
 
 use crate::tools::bash::Bash;
 use crate::tools::file::FileTool;
+use crate::tools::find_file_tool::FindAndReadFileTool;
 use crate::tools::ls::Ls;
 
 pub struct OllamaClient {
@@ -216,7 +217,8 @@ impl LlmClient for OllamaClient {
         .add_tool(Scraper {})
         .add_tool(Bash::new())
         .add_tool(Ls::new())
-        .add_tool(FileTool::new());
+        .add_tool(FileTool::new())
+        .add_tool(FindAndReadFileTool {});
 
         // Print that we're using tools in coordinator
         println!("\x1b[1;34m[COORDINATOR] Starting conversation with tools enabled\x1b[0m");
